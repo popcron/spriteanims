@@ -85,7 +85,7 @@ namespace Popcron.Animations
             {
                 if (currentAnimation == null) return null;
                 
-                return currentAnimation[currentFrame];
+                return currentAnimation[frame];
             }
         }
 
