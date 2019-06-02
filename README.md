@@ -19,11 +19,11 @@ using Popcron.Animations;
 
 public class Player : MonoBehaviour
 {
-	[SerializeField]
-	private bool moving = false;
+    [SerializeField]
+    private bool moving = false;
 
-	[SerializeField]
-	private SpriteAnimator animator;
+    [SerializeField]
+    private SpriteAnimator animator;
 	
     private void Update()
     {
