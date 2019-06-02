@@ -1,0 +1,7 @@
+{
+    "name": "com.popcron.spriteanim",
+    "displayName": "Popcron Sprite Animator",
+    "version": "0.0.1",
+    "unity": "2018.3",
+    "description": "Quick sprite animation utility."
+}
