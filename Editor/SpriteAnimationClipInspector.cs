@@ -79,7 +79,7 @@ namespace Popcron.Animations
                 h += 18;
                 h += 18;
                 h += 18;
-                h += 20 * Mathf.Max(frames.arraySize + 1, 2);
+                h += 21 * Mathf.Max(frames.arraySize + 1, 2);
             }
             return h;
         }
