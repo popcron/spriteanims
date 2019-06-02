@@ -24,7 +24,25 @@ namespace Popcron.Animations
         private bool finishedPlaying;
         private CancellationTokenSource cts;
 
-        public List<SpriteAnimationClip> Animations => animations;
+        public List<SpriteAnimationClip> Animations 
+		{
+			get
+			{
+				return animations;
+			}
+		}
+		
+		public SpriteRenderer SpriteRenderer
+		{
+			get
+			{
+				return spriteRenderer;
+			}
+			set
+			{
+				spriteRenderer = value;
+			}
+		}
 
         /// <summary>
         /// The current animation being played
@@ -33,7 +51,14 @@ namespace Popcron.Animations
         {
             get
             {
-                return currentAnimation?.Name;
+				if (currentAnimation != null)
+				{
+					return currentAnimation.Name;
+				}
+				else
+				{
+					return null;
+				}
             }
             set
             {
@@ -84,9 +109,15 @@ namespace Popcron.Animations
                 //play next frame
                 if (Time.time > nextFrame)
                 {
-                    if (spriteRenderer) spriteRenderer.sprite = currentAnimation[frame].Sprite;
-                    if (image) image.sprite = currentAnimation[frame].Sprite;
-
+                    if (spriteRenderer) 
+					{
+						spriteRenderer.sprite = currentAnimation[frame].Sprite;
+                    }
+					if (image) 
+					{
+						image.sprite = currentAnimation[frame].Sprite;
+					}
+					
                     float frameDuration = currentAnimation[frame].Duration;
                     nextFrame = Time.time + frameDuration;
                     frame++;
