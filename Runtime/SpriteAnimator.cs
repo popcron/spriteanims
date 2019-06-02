@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -78,6 +78,16 @@ namespace Popcron.Animations
                 }
             }
         }
+        
+        public SpriteAnimationFrame CurrentFrame
+        {
+            get
+            {
+                if (currentAnimation == null) return null;
+                
+                return currentAnimation[currentFrame];
+            }
+        }
 
         private void Awake()
         {
@@ -138,6 +148,15 @@ namespace Popcron.Animations
                     }
                 }
             }
+        }
+        
+        /// <summary>
+        /// Stops playing the current animation
+        /// </summary>
+        public void Stop()
+        {
+            nextFrame = 0f;
+            finishedPlaying = true;
         }
 
         /// <summary>
