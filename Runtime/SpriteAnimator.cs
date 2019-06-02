@@ -1,31 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Dinky.Animations
+namespace Popcron.Animations
 {
-    public class PlayerAnimator : Entity
+    [AddComponentMenu("Popcron/Animations/Sprite Animator")]
+    public class SpriteAnimator : MonoBehaviour
     {
         [SerializeField]
-        private string _defaultAnimation = "Animation";
+        private string defaultAnimation = "Animation";
 
         [SerializeField]
-        private List<PlayerAnimation> _animations = new List<PlayerAnimation>();
+        private List<SpriteAnimationClip> animations = new List<SpriteAnimationClip>();
 
         private SpriteRenderer spriteRenderer;
         private Image image;
-        private PlayerAnimation currentAnimation;
+        private SpriteAnimationClip currentAnimation;
         private float nextFrame;
         private int frame;
         private bool finishedPlaying;
         private CancellationTokenSource cts;
-        private int currentFrame;
 
-        public SpriteRenderer SpriteRenderer => spriteRenderer;
-        public List<PlayerAnimation> Animations => _animations;
+        public List<SpriteAnimationClip> Animations => animations;
 
         /// <summary>
         /// The current animation being played
@@ -38,8 +37,8 @@ namespace Dinky.Animations
             }
             set
             {
-                PlayerAnimation lastAnimation = currentAnimation;
-                PlayerAnimation newAnimation = Get(value);
+                SpriteAnimationClip lastAnimation = currentAnimation;
+                SpriteAnimationClip newAnimation = Get(value);
                 if (newAnimation != null)
                 {
                     currentAnimation = newAnimation;
@@ -49,58 +48,42 @@ namespace Dinky.Animations
                 {
                     //animation state changed
                     frame = 0;
-                    currentFrame = 0;
                     finishedPlaying = false;
-                    nextFrame = 0f;
+                    nextFrame = Time.time + 0f;
                 }
             }
         }
 
-        public PlayerAnimation.PlayerFrame CurrentFrame
-        {
-            get
-            {
-                if (currentAnimation == null) return null;
-
-                return currentAnimation[currentFrame];
-            }
-        }
-
-        public override void OnAwake()
+        private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             image = GetComponent<Image>();
-            Animation = _defaultAnimation;
+            Animation = defaultAnimation;
         }
 
-        public override void OnDisabled()
+        private void OnDisable()
         {
-            cts?.Cancel();
-        }
-
-        private void OnDrawGizmos()
-        {
-            PlayerAnimation.PlayerFrame frame = CurrentFrame;
-            if (frame != null)
+            if (cts != null)
             {
-                Vector2 min = new Vector3(0, frame.Min) + transform.position;
-                Gizmos.DrawLine(min + Vector2.left * 16, min + Vector2.right * 16);
-
-                Vector2 max = new Vector3(0, frame.Max) + transform.position;
-                Gizmos.DrawLine(max + Vector2.left * 16, max + Vector2.right * 16);
+                cts.Cancel();
             }
         }
 
-        public override void OnUpdate()
+        private void OnDestroy()
         {
-            if (Game.IsPaused) return;
+            if (cts != null)
+            {
+                cts.Cancel();
+            }
+        }
 
+        private void Update()
+        {
             if (currentAnimation != null)
             {
                 //play next frame
                 if (Time.time > nextFrame)
                 {
-                    currentFrame = frame;
                     if (spriteRenderer) spriteRenderer.sprite = currentAnimation[frame].Sprite;
                     if (image) image.sprite = currentAnimation[frame].Sprite;
 
@@ -126,18 +109,12 @@ namespace Dinky.Animations
             }
         }
 
-        public void Stop()
-        {
-            nextFrame = 0f;
-            finishedPlaying = true;
-        }
-
         /// <summary>
-        /// Returns an animation by its name on this animator
+        /// Returns an animation clip by its name on this animator
         /// </summary>
-        public PlayerAnimation Get(string animationName)
+        public SpriteAnimationClip Get(string animationName)
         {
-            foreach (PlayerAnimation animation in Animations)
+            foreach (SpriteAnimationClip animation in Animations)
             {
                 if (animation.Name == animationName)
                 {
@@ -152,28 +129,25 @@ namespace Dinky.Animations
         {
             cts = new CancellationTokenSource();
             string lastAnimation = Animation;
-            Animation = animationName;
 
-            if (currentAnimation != null)
+            //set the animation clip
+            currentAnimation = Get(animationName);
+            frame = 0;
+            finishedPlaying = false;
+            nextFrame = Time.time + 0f;
+
+            //wait for the animation to finish playing
+            while (!finishedPlaying)
             {
-                float duration = currentAnimation[currentAnimation.Length - 1].Duration;
-                await Delay.Wait(duration, cts.Token);
-
-                while (!finishedPlaying)
+                if (cts != null && cts.Token.IsCancellationRequested == true)
                 {
-                    if (cts?.Token.IsCancellationRequested == true)
-                    {
-                        return;
-                    }
-
-                    if (Animation != animationName)
-                    {
-                        return;
-                    }
-                    await Delay.Wait(1);
+                    return;
                 }
+
+                await Task.Delay(1);
             }
 
+            //play the previous animation
             Animation = lastAnimation;
         }
     }

@@ -1,0 +1,17 @@
+{
+    "name": "Popcron.Animations.Editor",
+    "references": [
+        "GUID:85eea19c3945fab4695343a77240db63"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
