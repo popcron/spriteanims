@@ -119,32 +119,41 @@ namespace Popcron.Animations
                 //play next frame
                 if (Time.time > nextFrame)
                 {
-                    if (spriteRenderer) 
-					{
-						spriteRenderer.sprite = currentAnimation[frame].Sprite;
-                    }
-					if (image) 
-					{
-						image.sprite = currentAnimation[frame].Sprite;
-					}
-					
-                    float frameDuration = currentAnimation[frame].Duration;
-                    nextFrame = Time.time + frameDuration;
-                    frame++;
-
-                    //loop frames
-                    if (frame >= currentAnimation.Length)
+                    SoriteAnimationFrame current = currentAnimation[frame];
+                    if (current != null)
                     {
-                        if (currentAnimation.Loop)
+                        if (spriteRenderer) 
                         {
-                            frame = 0;
-                            finishedPlaying = false;
+                            spriteRenderer.sprite = current.Sprite;
                         }
-                        else
+                        if (image) 
                         {
-                            frame = currentAnimation.Length - 1;
-                            finishedPlaying = true;
+                            image.sprite = current.Sprite;
                         }
+
+                        float frameDuration = current.Duration;
+                        nextFrame = Time.time + frameDuration;
+                        frame++;
+
+                        //loop frames
+                        if (frame >= currentAnimation.Length)
+                        {
+                            if (currentAnimation.Loop)
+                            {
+                                frame = 0;
+                                finishedPlaying = false;
+                            }
+                            else
+                            {
+                                frame = currentAnimation.Length - 1;
+                                finishedPlaying = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //frame is null, probably out of range
+                        frame = 0;
                     }
                 }
             }
