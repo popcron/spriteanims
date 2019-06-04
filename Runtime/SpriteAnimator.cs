@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,25 +24,25 @@ namespace Popcron.Animations
         private bool finishedPlaying;
         private CancellationTokenSource cts;
 
-        public List<SpriteAnimationClip> Animations 
-		{
-			get
-			{
-				return animations;
-			}
-		}
-		
-		public SpriteRenderer SpriteRenderer
-		{
-			get
-			{
-				return spriteRenderer;
-			}
-			set
-			{
-				spriteRenderer = value;
-			}
-		}
+        public List<SpriteAnimationClip> Animations
+        {
+            get
+            {
+                return animations;
+            }
+        }
+
+        public SpriteRenderer SpriteRenderer
+        {
+            get
+            {
+                return spriteRenderer;
+            }
+            set
+            {
+                spriteRenderer = value;
+            }
+        }
 
         /// <summary>
         /// The current animation being played
@@ -51,14 +51,14 @@ namespace Popcron.Animations
         {
             get
             {
-				if (currentAnimation != null)
-				{
-					return currentAnimation.Name;
-				}
-				else
-				{
-					return null;
-				}
+                if (currentAnimation != null)
+                {
+                    return currentAnimation.Name;
+                }
+                else
+                {
+                    return null;
+                }
             }
             set
             {
@@ -78,13 +78,13 @@ namespace Popcron.Animations
                 }
             }
         }
-        
+
         public SpriteAnimationFrame CurrentFrame
         {
             get
             {
                 if (currentAnimation == null) return null;
-                
+
                 return currentAnimation[frame];
             }
         }
@@ -119,14 +119,14 @@ namespace Popcron.Animations
                 //play next frame
                 if (Time.time > nextFrame)
                 {
-                    SoriteAnimationFrame current = currentAnimation[frame];
+                    SpriteAnimationFrame current = currentAnimation[frame];
                     if (current != null)
                     {
-                        if (spriteRenderer) 
+                        if (spriteRenderer)
                         {
                             spriteRenderer.sprite = current.Sprite;
                         }
-                        if (image) 
+                        if (image)
                         {
                             image.sprite = current.Sprite;
                         }
@@ -158,7 +158,7 @@ namespace Popcron.Animations
                 }
             }
         }
-        
+
         /// <summary>
         /// Stops playing the current animation
         /// </summary>
