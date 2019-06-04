@@ -24,6 +24,6 @@ namespace Popcron.Animations
         public int Length => frames.Count;
         public bool Loop => loop;
         public List<SpriteAnimationFrame> Frames => frames;
-        public SpriteAnimationFrame this[int index] => frames[index];
+        public SpriteAnimationFrame this[int index] => (index >= 0 && index < frames.Count) ? frames[index] : null;
     }
 }
