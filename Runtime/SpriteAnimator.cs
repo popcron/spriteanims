@@ -10,6 +10,8 @@ namespace Popcron.Animations
     [AddComponentMenu("Popcron/Animations/Sprite Animator")]
     public class SpriteAnimator : MonoBehaviour
     {
+        public static bool IsPaused { get; set; } = false;
+        
         [SerializeField]
         private string defaultAnimation = "Animation";
 
@@ -24,13 +26,7 @@ namespace Popcron.Animations
         private bool finishedPlaying;
         private CancellationTokenSource cts;
 
-        public List<SpriteAnimationClip> Animations
-        {
-            get
-            {
-                return animations;
-            }
-        }
+        public List<SpriteAnimationClip> Animations => animations;
 
         public SpriteRenderer SpriteRenderer
         {
@@ -114,6 +110,7 @@ namespace Popcron.Animations
 
         private void Update()
         {
+            if (IsPaused) return;
             if (currentAnimation != null)
             {
                 //play next frame
