@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Popcron.Animations
 {
@@ -8,23 +7,27 @@ namespace Popcron.Animations
     public class SpriteAnimationFrame
     {
         [SerializeField]
-        [FormerlySerializedAs("_sprite")]
         private Sprite sprite;
 
         [SerializeField]
         private float duration = 0.1f;
 
-        public Sprite Sprite => sprite;
+        /// <summary>
+        /// The sprite that this frame uses.
+        /// </summary>
+        public Sprite Sprite
+        {
+            get => sprite;
+            set => sprite = value;
+        }
+
+        /// <summary>
+        /// The duration of this frame in seconds.
+        /// </summary>
         public float Duration
         {
-            get
-            {
-                return duration;
-            }
-            set
-            {
-                duration = value;
-            }
+            get => duration;
+            set => duration = Mathf.Clamp(value, 0, float.MaxValue);
         }
     }
 }

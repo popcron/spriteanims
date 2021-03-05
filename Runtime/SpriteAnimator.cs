@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using UnityEditor.Profiling;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,10 +13,16 @@ namespace Popcron.Animations
     [AddComponentMenu("Popcron/Animations/Sprite Animator")]
     public class SpriteAnimator : MonoBehaviour
     {
-        public static bool IsPaused { get; set; } = false;
-        
+        /// <summary>
+        /// Global pause flag.
+        /// </summary>
+        public static bool GlobalPause { get; set; } = false;
+
         [SerializeField]
         private string defaultAnimation = "Animation";
+
+        [SerializeField]
+        private float speed = 1f;
 
         [SerializeField]
         private List<SpriteAnimationClip> animations = new List<SpriteAnimationClip>();
@@ -22,28 +31,49 @@ namespace Popcron.Animations
         private Image image;
         private SpriteAnimationClip currentAnimation;
         private float nextFrame;
+        private bool inReverse;
         private int frame;
         private bool finishedPlaying;
+        private bool isPaused;
+        private float time;
         private CancellationTokenSource cts;
 
-        public List<SpriteAnimationClip> Animations => animations;
+        /// <summary>
+        /// Is this individual animator paused?
+        /// </summary>
+        public bool IsPaused
+        {
+            get => isPaused;
+            set => isPaused = value;
+        }
 
+        /// <summary>
+        /// The playback speed of the animator.
+        /// </summary>
+        public float Speed
+        {
+            get => speed;
+            set => speed = Mathf.Clamp(speed, 0, float.MaxValue);
+        }
+
+        /// <summary>
+        /// The animation clips on this animator.
+        /// </summary>
+        public ReadOnlyCollection<SpriteAnimationClip> Animations => animations.AsReadOnly();
+
+        /// <summary>
+        /// The sprite renderer that this animator is using.
+        /// </summary>
         public SpriteRenderer SpriteRenderer
         {
-            get
-            {
-                return spriteRenderer;
-            }
-            set
-            {
-                spriteRenderer = value;
-            }
+            get => spriteRenderer;
+            set => spriteRenderer = value;
         }
 
         /// <summary>
         /// The current animation being played
         /// </summary>
-        public string Animation
+        public string CurrentAnimation
         {
             get
             {
@@ -70,16 +100,22 @@ namespace Popcron.Animations
                     //animation state changed
                     frame = 0;
                     finishedPlaying = false;
-                    nextFrame = Time.time + 0f;
+                    nextFrame = 0f;
                 }
             }
         }
 
+        /// <summary>
+        /// The current frame being shown.
+        /// </summary>
         public SpriteAnimationFrame CurrentFrame
         {
             get
             {
-                if (currentAnimation == null) return null;
+                if (currentAnimation is null)
+                {
+                    return null;
+                }
 
                 return currentAnimation[frame];
             }
@@ -89,7 +125,24 @@ namespace Popcron.Animations
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             image = GetComponent<Image>();
-            Animation = defaultAnimation;
+            CurrentAnimation = defaultAnimation;
+        }
+
+        /// <summary>
+        /// Loads these animation clips and stop all animation.
+        /// </summary>
+        public void Set(IList<SpriteAnimationClip> animations)
+        {
+            this.animations = animations.ToList();
+            Stop();
+        }
+
+        private void OnValidate()
+        {
+            if (speed < 0)
+            {
+                speed = 0;
+            }
         }
 
         private void OnDisable()
@@ -110,11 +163,17 @@ namespace Popcron.Animations
 
         private void Update()
         {
-            if (IsPaused) return;
+            if (GlobalPause || isPaused)
+            {
+                return;
+            }
+
+            float delta = Time.deltaTime;
+            time += delta * speed;
             if (currentAnimation != null)
             {
                 //play next frame
-                if (Time.time > nextFrame)
+                if (time > nextFrame)
                 {
                     SpriteAnimationFrame current = currentAnimation[frame];
                     if (current != null)
@@ -123,17 +182,26 @@ namespace Popcron.Animations
                         {
                             spriteRenderer.sprite = current.Sprite;
                         }
+
                         if (image)
                         {
                             image.sprite = current.Sprite;
                         }
 
                         float frameDuration = current.Duration;
-                        nextFrame = Time.time + frameDuration;
-                        frame++;
+                        nextFrame = time + frameDuration;
+
+                        if (inReverse)
+                        {
+                            frame--;
+                        }
+                        else
+                        {
+                            frame++;
+                        }
 
                         //loop frames
-                        if (frame >= currentAnimation.Length)
+                        if (frame >= currentAnimation.Length && !inReverse)
                         {
                             if (currentAnimation.Loop)
                             {
@@ -143,6 +211,19 @@ namespace Popcron.Animations
                             else
                             {
                                 frame = currentAnimation.Length - 1;
+                                finishedPlaying = true;
+                            }
+                        }
+                        else if (frame < 0 && inReverse)
+                        {
+                            if (currentAnimation.Loop)
+                            {
+                                frame = currentAnimation.Length - 1;
+                                finishedPlaying = false;
+                            }
+                            else
+                            {
+                                frame = 0;
                                 finishedPlaying = true;
                             }
                         }
@@ -157,7 +238,7 @@ namespace Popcron.Animations
         }
 
         /// <summary>
-        /// Stops playing the current animation
+        /// Stops playing the current animation.
         /// </summary>
         public void Stop()
         {
@@ -166,7 +247,23 @@ namespace Popcron.Animations
         }
 
         /// <summary>
-        /// Returns an animation clip by its name on this animator
+        /// Returns true if an animation clip with this name exists.
+        /// </summary>
+        public bool Exists(string animationName)
+        {
+            foreach (SpriteAnimationClip animation in Animations)
+            {
+                if (animation.Name == animationName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns an animation clip by its name on this animator.
         /// </summary>
         public SpriteAnimationClip Get(string animationName)
         {
@@ -181,16 +278,35 @@ namespace Popcron.Animations
             return null;
         }
 
-        public async Task Play(string animationName)
+        /// <summary>
+        /// Starts playing this animation.
+        /// </summary>
+        public void Play(string animationName, bool inReverse = false)
+        {
+            SpriteAnimationClip newAnimation = Get(animationName);
+            if (currentAnimation != newAnimation || this.inReverse != inReverse)
+            {
+                currentAnimation = Get(animationName);
+                frame = 0;
+                finishedPlaying = false;
+                nextFrame = 0f;
+                this.inReverse = inReverse;
+            }
+        }
+
+        /// <summary>
+        /// Starts playing this animation as an async task.
+        /// </summary>
+        public async Task PlayTaskAsync(string animationName, bool inReverse = false)
         {
             cts = new CancellationTokenSource();
-            string lastAnimation = Animation;
 
             //set the animation clip
             currentAnimation = Get(animationName);
             frame = 0;
             finishedPlaying = false;
-            nextFrame = Time.time + 0f;
+            nextFrame = 0f;
+            this.inReverse = inReverse;
 
             //wait for the animation to finish playing
             while (!finishedPlaying)
@@ -202,9 +318,6 @@ namespace Popcron.Animations
 
                 await Task.Delay(1);
             }
-
-            //play the previous animation
-            Animation = lastAnimation;
         }
     }
 }

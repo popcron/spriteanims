@@ -8,7 +8,7 @@ namespace Popcron.Animations
     {
         public override void OnInspectorGUI()
         {
-            SpriteAnimator animator = (SpriteAnimator)target;
+            SpriteAnimator animator = target as SpriteAnimator;
 
             //draw the default animation field
             SerializedProperty defaultAnimation = serializedObject.FindProperty("defaultAnimation");
@@ -21,7 +21,9 @@ namespace Popcron.Animations
             EditorGUILayoutExtra.Popup(defaultAnimation, options);
 
             //draw the array of animations
+            SerializedProperty speed = serializedObject.FindProperty("speed");
             SerializedProperty animations = serializedObject.FindProperty("animations");
+            EditorGUILayout.PropertyField(speed);
             EditorGUILayout.PropertyField(animations, true);
 
             serializedObject.ApplyModifiedProperties();
