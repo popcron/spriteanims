@@ -29,6 +29,11 @@ namespace Popcron.Animations
         public int Length => frames.Count;
 
         /// <summary>
+        /// The length in frames of this animation.
+        /// </summary>
+        public int Count => frames.Count;
+
+        /// <summary>
         /// Should this animation loop?
         /// </summary>
         public bool Loop => loop;
@@ -43,6 +48,7 @@ namespace Popcron.Animations
             get => (index >= 0 && index < frames.Count) ? frames[index] : null;
         }
 
+        public void Add(Sprite sprite, float duration = 0.1f) => frames.Add(new SpriteAnimationFrame(sprite, duration));
         public IEnumerator<SpriteAnimationFrame> GetEnumerator() => ((IEnumerable<SpriteAnimationFrame>)frames).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)frames).GetEnumerator();
     }

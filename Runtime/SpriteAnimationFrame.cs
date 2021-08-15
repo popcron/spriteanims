@@ -12,6 +12,12 @@ namespace Popcron.Animations
         [SerializeField]
         private float duration = 0.1f;
 
+        public SpriteAnimationFrame(Sprite sprite, float duration = 0.1f)
+        {
+            this.sprite = sprite;
+            this.duration = duration;
+        }
+
         /// <summary>
         /// The sprite that this frame uses.
         /// </summary>
